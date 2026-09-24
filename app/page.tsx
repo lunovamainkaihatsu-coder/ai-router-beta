@@ -8,6 +8,10 @@ type RouteResult = {
   usedAi: string;
   reason: string;
   answer: string;
+  sources: {
+    title: string;
+    url: string;
+  }[];
 };
 
 const aiInfo = {
@@ -67,6 +71,7 @@ export default function Home() {
           data.reason ??
           "質問内容から最適なAIを選択しました",
         answer: data.answer ?? "回答を取得できませんでした。",
+        sources: data.sources ?? [],
       });
     } catch (error) {
       console.error(error);
@@ -113,6 +118,33 @@ export default function Home() {
           <div className="mt-8 rounded-xl border border-gray-200 p-6 text-center">
             <p className="text-gray-600">
               AIが回答を考えています...
+            </p>
+          </div>
+        )}
+
+        {result && result.selectedAi !== result.usedAi && (
+          <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4">
+            <p className="text-sm font-medium text-amber-800">
+              AIを自動切り替えしました
+            </p>
+
+            <div className="mt-3 flex items-center gap-3">
+              <span className="font-bold">
+                {result.selectedAi}
+              </span>
+
+              <span className="text-gray-400">
+                →
+              </span>
+
+              <span className="font-bold">
+                {result.usedAi}
+              </span>
+            </div>
+
+            <p className="mt-2 text-sm text-gray-600">
+              選択されたAIで回答を生成できなかったため、
+              別のAIへ自動的に切り替えました。
             </p>
           </div>
         )}
@@ -204,6 +236,28 @@ export default function Home() {
               >
                 {result.answer}
               </ReactMarkdown>
+
+              {result.sources.length > 0 && (
+                <div className="mt-6 border-t border-gray-200 pt-5">
+                  <p className="mb-3 font-bold">
+                    🔗 参照元
+                  </p>
+
+                  <div className="space-y-2">
+                    {result.sources.map((source, index) => (
+                      <a
+                        key={`${source.url}-${index}`}
+                        href={source.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block rounded-lg border border-gray-200 p-3 text-sm hover:bg-gray-50"
+                      >
+                        {source.title} ↗
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </section>
         )}

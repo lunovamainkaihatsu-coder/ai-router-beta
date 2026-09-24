@@ -9,6 +9,16 @@ type AiRoute = {
   reason: string;
 };
 
+type GeminiSource = {
+  title: string;
+  url: string;
+};
+
+type GeminiAnswer = {
+  answer: string;
+  sources: GeminiSource[];
+};
+
 async function selectAiWithOpenAI(
   question: string,
 ): Promise<AiRoute> {
@@ -128,7 +138,7 @@ async function answerWithOpenAI(
 }
 async function answerWithGemini(
   question: string,
-): Promise<string> {
+): Promise<GeminiAnswer> {
   const apiKey = process.env.GEMINI_API_KEY;
 
   if (!apiKey) {
@@ -184,12 +194,47 @@ async function answerWithGemini(
     );
   }
 
-  const data = await response.json();
+const data = await response.json();
 
-  return (
-    data.candidates?.[0]?.content?.parts?.[0]?.text ??
-    "Geminiから回答を取得できませんでした。"
+console.log(
+  "Gemini Grounding Sources:",
+  JSON.stringify(
+    data.candidates?.[0]?.groundingMetadata?.groundingChunks,
+    null,
+    2,
+  ),
+);
+
+const groundingChunks =
+  data.candidates?.[0]?.groundingMetadata?.groundingChunks ?? [];
+
+const sources: GeminiSource[] = groundingChunks
+  .filter(
+    (chunk: {
+      web?: {
+        uri?: string;
+        title?: string;
+      };
+    }) => chunk.web?.uri,
+  )
+  .map(
+    (chunk: {
+      web?: {
+        uri?: string;
+        title?: string;
+      };
+    }) => ({
+      title: chunk.web?.title ?? "参照元",
+      url: chunk.web?.uri ?? "",
+    }),
   );
+
+return {
+  answer:
+    data.candidates?.[0]?.content?.parts?.[0]?.text ??
+    "Geminiから回答を取得できませんでした。",
+  sources,
+};
 }
 async function answerWithClaude(
   question: string,
@@ -281,12 +326,16 @@ export async function POST(req: Request) {
     const route = await selectAiWithOpenAI(question);
 
     let answer: string;
+    let sources: GeminiSource[] = [];
     let usedAi = route.aiName;
     let reason = route.reason;
 
     try {
       if (route.aiName === "Gemini") {
-        answer = await answerWithGemini(question);
+        const geminiResult = await answerWithGemini(question);
+
+        answer = geminiResult.answer;
+        sources = geminiResult.sources;
       } else if (route.aiName === "Claude") {
         answer = await answerWithClaude(question);
       } else {
@@ -315,6 +364,7 @@ export async function POST(req: Request) {
       usedAi,
       reason,
       answer,
+      sources,
     });
   } catch (error) {
     console.error("API Error:", error);
