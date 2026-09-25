@@ -11,6 +11,7 @@ type RouteResult = {
   sources: {
     title: string;
     url: string;
+    context: string;
   }[];
 };
 
@@ -250,9 +251,15 @@ export default function Home() {
                         href={source.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="block rounded-lg border border-gray-200 p-3 text-sm hover:bg-gray-50"
+                        className="block rounded-lg border border-gray-200 p-3 hover:bg-gray-50"
                       >
-                        {source.title} ↗
+                        <p className="font-medium">
+                          {source.title} ↗
+                        </p>
+
+                        <p className="mt-2 text-sm leading-6 text-gray-600">
+                          {source.context}
+                        </p>
                       </a>
                     ))}
                   </div>

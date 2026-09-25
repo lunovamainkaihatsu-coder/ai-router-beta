@@ -12,6 +12,7 @@ type AiRoute = {
 type GeminiSource = {
   title: string;
   url: string;
+  context: string;
 };
 
 type GeminiAnswer = {
@@ -196,17 +197,12 @@ async function answerWithGemini(
 
 const data = await response.json();
 
-console.log(
-  "Gemini Grounding Sources:",
-  JSON.stringify(
-    data.candidates?.[0]?.groundingMetadata?.groundingChunks,
-    null,
-    2,
-  ),
-);
 
 const groundingChunks =
   data.candidates?.[0]?.groundingMetadata?.groundingChunks ?? [];
+
+const groundingSupports =
+  data.candidates?.[0]?.groundingMetadata?.groundingSupports ?? [];
 
 const sources: GeminiSource[] = groundingChunks
   .filter(
@@ -218,16 +214,45 @@ const sources: GeminiSource[] = groundingChunks
     }) => chunk.web?.uri,
   )
   .map(
-    (chunk: {
+  (
+    chunk: {
       web?: {
         uri?: string;
         title?: string;
       };
-    }) => ({
+    },
+    index: number,
+  ) => {
+    const relatedSupport = groundingSupports.find(
+      (support: {
+        segment?: {
+          text?: string;
+        };
+        groundingChunkIndices?: number[];
+      }) =>
+        support.groundingChunkIndices?.includes(index),
+    );
+
+    return {
       title: chunk.web?.title ?? "参照元",
       url: chunk.web?.uri ?? "",
-    }),
-  );
+      context: (() => {
+        const text = (
+          relatedSupport?.segment?.text ??
+          "この回答の参照元として使用されました。"
+        )
+          .replace(/\*\*/g, "")
+          .replace(/\*/g, "")
+          .replace(/\n/g, " ")
+          .trim();
+
+        return text.length > 100
+          ? `${text.slice(0, 100)}…`
+          : text;
+      })(),
+    };
+  },
+);
 
 return {
   answer:
