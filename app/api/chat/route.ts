@@ -254,11 +254,19 @@ const sources: GeminiSource[] = groundingChunks
   },
 );
 
+const uniqueSources = sources.filter(
+  (source, index, self) =>
+    index ===
+    self.findIndex(
+      (item) => item.url === source.url,
+    ),
+);
+
 return {
   answer:
     data.candidates?.[0]?.content?.parts?.[0]?.text ??
     "Geminiから回答を取得できませんでした。",
-  sources,
+  sources: uniqueSources,
 };
 }
 async function answerWithClaude(
