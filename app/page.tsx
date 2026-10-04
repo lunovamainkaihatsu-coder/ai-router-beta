@@ -108,6 +108,44 @@ export default function Home() {
           placeholder="質問を入力してください"
         />
 
+        <div className="mt-3">
+          <p className="mb-2 text-sm text-gray-500">
+            💡 質問例
+          </p>
+
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() =>
+                setQuestion("新しいAIアプリのアイデアを5つ考えてください")
+              }
+              className="rounded-lg border border-gray-200 px-3 py-2 text-sm hover:bg-gray-50"
+            >
+              💬 アプリのアイデア
+            </button>
+
+            <button
+              type="button"
+              onClick={() =>
+                setQuestion("今日の生成AIに関する最新ニュースを教えてください")
+              }
+              className="rounded-lg border border-gray-200 px-3 py-2 text-sm hover:bg-gray-50"
+            >
+              🔍 最新のAIニュース
+            </button>
+
+            <button
+              type="button"
+              onClick={() =>
+                setQuestion("Next.jsのコードでエラーが出ています。原因と修正方法を教えてください")
+              }
+              className="rounded-lg border border-gray-200 px-3 py-2 text-sm hover:bg-gray-50"
+            >
+              💻 コードのエラー修正
+            </button>
+          </div>
+        </div>
+
         <button
           onClick={handleSubmit}
           disabled={isLoading}
