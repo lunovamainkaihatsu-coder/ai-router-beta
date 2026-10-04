@@ -34,6 +34,7 @@ export default function Home() {
   const [question, setQuestion] = useState("");
   const [result, setResult] = useState<RouteResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const handleSubmit = async () => {
     const trimmedQuestion = question.trim();
@@ -191,6 +192,23 @@ export default function Home() {
             </p>
 
             <div className="mt-3">
+              <div className="mb-3 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(result.answer);
+                    setCopied(true);
+
+                    setTimeout(() => {
+                      setCopied(false);
+                    }, 2000);
+                  }}
+                  className="rounded-lg border border-gray-200 px-3 py-2 text-sm hover:bg-gray-50"
+                >
+                  {copied ? "✅ コピーしました！" : "📋 回答をコピー"}
+                </button>
+              </div>
+
               <ReactMarkdown
                 components={{
                   h1: ({ children }) => (
