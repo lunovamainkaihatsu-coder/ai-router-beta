@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 
 type RouteResult = {
@@ -35,6 +35,8 @@ export default function Home() {
   const [result, setResult] = useState<RouteResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSubmit = async () => {
     const trimmedQuestion = question.trim();
@@ -101,6 +103,7 @@ export default function Home() {
         </p>
 
         <textarea
+          ref={textareaRef}
           value={question}
           onChange={(event) => setQuestion(event.target.value)}
           disabled={isLoading}
@@ -116,9 +119,13 @@ export default function Home() {
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={() =>
-                setQuestion("新しいAIアプリのアイデアを5つ考えてください")
-              }
+              onClick={() => {
+                setQuestion("新しいAIアプリのアイデアを5つ考えてください");
+
+                setTimeout(() => {
+                  textareaRef.current?.focus();
+                }, 0);
+              }}
               className="rounded-lg border border-gray-200 px-3 py-2 text-sm hover:bg-gray-50"
             >
               💬 アプリのアイデア
@@ -126,9 +133,13 @@ export default function Home() {
 
             <button
               type="button"
-              onClick={() =>
-                setQuestion("今日の生成AIに関する最新ニュースを教えてください")
-              }
+              onClick={() => {
+                setQuestion("今日の生成AIに関する最新ニュースを教えてください");
+
+                setTimeout(() => {
+                  textareaRef.current?.focus();
+                }, 0);
+              }}
               className="rounded-lg border border-gray-200 px-3 py-2 text-sm hover:bg-gray-50"
             >
               🔍 最新のAIニュース
@@ -136,9 +147,15 @@ export default function Home() {
 
             <button
               type="button"
-              onClick={() =>
-                setQuestion("Next.jsのコードでエラーが出ています。原因と修正方法を教えてください")
-              }
+              onClick={() => {
+                setQuestion(
+                  "Next.jsのコードでエラーが出ています。原因と修正方法を教えてください"
+                );
+
+                setTimeout(() => {
+                  textareaRef.current?.focus();
+                }, 0);
+              }}
               className="rounded-lg border border-gray-200 px-3 py-2 text-sm hover:bg-gray-50"
             >
               💻 コードのエラー修正
@@ -230,7 +247,7 @@ export default function Home() {
             </p>
 
             <div className="mt-3">
-              <div className="mb-3 flex justify-end">
+              <div className="mb-3 flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => {
@@ -244,6 +261,22 @@ export default function Home() {
                   className="rounded-lg border border-gray-200 px-3 py-2 text-sm hover:bg-gray-50"
                 >
                   {copied ? "✅ コピーしました！" : "📋 回答をコピー"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuestion("");
+                    setResult(null);
+                    setCopied(false);
+
+                    setTimeout(() => {
+                      textareaRef.current?.focus();
+                    }, 0);
+                  }}
+                  className="rounded-lg border border-gray-200 px-3 py-2 text-sm hover:bg-gray-50"
+                >
+                  🔄 新しい質問
                 </button>
               </div>
 
