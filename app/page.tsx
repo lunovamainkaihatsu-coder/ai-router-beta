@@ -28,6 +28,10 @@ const aiInfo = {
     image: "/claude.png",
     specialty: "コード・長文分析",
   },
+    "AI MIX": {
+    image: "/aimix.png",
+    specialty: "3つのAIで調査・分析・回答",
+  },
 };
 
 export default function Home() {
@@ -35,6 +39,7 @@ export default function Home() {
   const [result, setResult] = useState<RouteResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [mixLoadingStep, setMixLoadingStep] = useState(0);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -89,6 +94,69 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleMixSubmit = async () => {
+    const trimmedQuestion = question.trim();
+
+    if (!trimmedQuestion) {
+      alert("質問を入力してください");
+      return;
+    }
+
+    setIsLoading(true);
+    setResult(null);
+    setMixLoadingStep(1);
+
+    const claudeTimer = setTimeout(() => {
+      setMixLoadingStep(2);
+    }, 3000);
+
+    const chatgptTimer = setTimeout(() => {
+      setMixLoadingStep(3);
+    }, 7000);
+
+    try {
+      const response = await fetch("/api/mix", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          question: trimmedQuestion,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error ?? "AI MIXでエラーが発生しました",
+        );
+      }
+
+      console.log("AI MIX Response:", data);
+      console.log("Gemini Research:", data.research);
+      console.log("Claude Analysis:", data.analysis);
+      console.log("AI MIX Answer:", data.answer);
+
+      setResult({
+        selectedAi: "AI MIX",
+        usedAi: "AI MIX",
+        reason: "Geminiで最新情報を調査し、Claudeで分析・整理したうえで、ChatGPTが最終回答にまとめました。",
+        answer: data.answer,
+        sources: [],
+      });
+    } catch (error) {
+      console.error("AI MIX Error:", error);
+      alert("AI MIXの呼び出しに失敗しました");
+    } finally {
+        clearTimeout(claudeTimer);
+        clearTimeout(chatgptTimer);
+
+        setIsLoading(false);
+        setMixLoadingStep(0);
+      }
   };
 
   return (
@@ -163,13 +231,49 @@ export default function Home() {
           </div>
         </div>
 
-        <button
-          onClick={handleSubmit}
-          disabled={isLoading}
-          className="mt-4 w-full rounded-lg bg-black px-6 py-3 font-bold text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-400"
-        >
-          {isLoading ? "回答を生成中..." : "質問する"}
-        </button>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <button
+            onClick={handleSubmit}
+            disabled={isLoading}
+            className="w-full rounded-lg bg-black px-6 py-3 font-bold text-white hover:bg-gray-800 disabled:cursor-not-allowed"
+          >
+            {isLoading ? "回答を生成中..." : "質問する"}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleMixSubmit}
+            disabled={isLoading}
+            className="w-full rounded-lg border border-gray-300 px-6 py-3 font-bold hover:bg-gray-50 disabled:cursor-not-allowed"
+          >
+            ✨ AI MIXで回答
+          </button>
+        </div>
+
+        {mixLoadingStep > 0 && (
+          <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
+            <div className="flex items-center gap-3">
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-black" />
+
+              <div>
+                <p className="font-bold">
+                  ✨ AI MIXが回答を作っています
+                </p>
+
+                <p className="mt-1 text-sm text-gray-600">
+                    {mixLoadingStep === 1 &&
+                      "🔍 Geminiが最新情報を調査しています..."}
+
+                    {mixLoadingStep === 2 &&
+                      "🧠 Claudeが情報を分析・整理しています..."}
+
+                    {mixLoadingStep === 3 &&
+                      "✍️ ChatGPTが最終回答を作成しています..."}
+                  </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {isLoading && (
           <div className="mt-8 rounded-xl border border-gray-200 p-6 text-center">
